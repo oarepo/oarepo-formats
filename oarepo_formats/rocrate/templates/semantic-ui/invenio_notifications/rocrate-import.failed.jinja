@@ -1,0 +1,77 @@
+{#
+  SPDX-FileCopyrightText: 2026 CESNET z.s.p.o
+  SPDX-License-Identifier: MIT
+
+  The failure mail: always sent, whatever `?notifications` says. Self-contained, like the other two (see
+  the note in rocrate-import.completed.jinja): the backend renders the template's own blocks.
+#}
+{% set record = notification.context.record %}
+{% set files = notification.context.files %}
+
+{# the reason code -> its wording, translated when the mail is rendered (in the recipient's locale) #}
+{% set reasons = {
+    "files": _("a file could not be fetched"),
+    "publish": _("the record could not be published"),
+    "modified": _("the draft was edited during the import"),
+    "permission": _("the record could not be read any more"),
+    "error": _("an unexpected error stopped the import"),
+    "archive": _("the archive could not be read any more"),
+    "checksum": _("a file of the package does not match its checksum"),
+} %}
+{% set reason = reasons.get(notification.context.reason) or _("an unknown error") %}
+{% set error = notification.context.error %}
+
+{%- block subject -%}
+   {{ _("RO-Crate import failed: {title}").format(title=record.title or record.id) }}
+{%- endblock subject -%}
+
+{%- block html_body -%}
+{%- autoescape true -%}
+<table style="font-family:'Lato',Helvetica,Arial,sans-serif;border-spacing:15px">
+    <tr>
+        <td>{{ _("The import of '{title}' did not finish: {reason}.").format(
+            title=record.title or record.id, reason=reason) }}</td>
+    </tr>
+    {% if files %}
+    <tr>
+        <td>
+            {% for file in files %}
+            <div><code>{{ file.key }}</code>: {{ file.status }}{% if file.error %} - {{ file.error }}{% endif %}</div>
+            {% endfor %}
+        </td>
+    </tr>
+    {% endif %}
+    {% if error %}
+    <tr><td><em>{{ error }}</em></td></tr>
+    {% endif %}
+    {% if record.self_html %}
+    <tr>
+        <td><a href="{{ record.self_html }}" class="button">{{ _("Open the record") }}</a></td>
+    </tr>
+    {% endif %}
+</table>
+{%- endautoescape -%}
+{%- endblock html_body -%}
+
+{%- block plain_body -%}
+{{ _("The import of '{title}' did not finish: {reason}.").format(title=record.title or record.id, reason=reason) }}
+
+{% for file in files %}{{ file.key }}: {{ file.status }}{% if file.error %} - {{ file.error }}{% endif %}
+{% endfor %}
+{% if error %}{{ error }}
+{% endif %}
+{% if record.self_html %}{{ _("Open the record:") }} {{ record.self_html }}
+{% endif %}
+{%- endblock plain_body -%}
+
+{%- block md_body -%}
+{{ _("*The import of '{title}' did not finish*: {reason}.").format(title=record.title or record.id, reason=reason) }}
+
+{% for file in files %}- `{{ file.key }}`: {{ file.status }}{% if file.error %} - {{ file.error }}{% endif %}
+{% endfor %}
+{% if error %}{{ error }}
+{% endif %}
+{% if record.self_html %}
+[{{ _("Open the record") }}]({{ record.self_html }})
+{% endif %}
+{%- endblock md_body -%}

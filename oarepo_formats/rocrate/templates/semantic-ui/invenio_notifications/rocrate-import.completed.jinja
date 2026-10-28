@@ -1,0 +1,50 @@
+{#
+  SPDX-FileCopyrightText: 2026 CESNET z.s.p.o
+  SPDX-License-Identifier: MIT
+
+  A mail of the RO-Crate import. Each template is self-contained: invenio-notifications renders
+  `template.blocks`, and a `{% extends %}` would leave only the child's blocks in it (no html_body). The
+  html part is escaped because `record.title` comes from the crate (usually exported by another repository)
+  and `error` can be a whole response from a remote host: neither is trusted.
+#}
+{% set record = notification.context.record %}
+{% set files = notification.context.files %}
+
+{%- block subject -%}
+   {{ _("RO-Crate import finished: {title}").format(title=record.title or record.id) }}
+{%- endblock subject -%}
+
+{%- block html_body -%}
+{%- autoescape true -%}
+<table style="font-family:'Lato',Helvetica,Arial,sans-serif;border-spacing:15px">
+    <tr>
+        <td>{{ ngettext("All %(num)d file of '%(title)s' was downloaded and the record is ready.",
+                        "All %(num)d files of '%(title)s' were downloaded and the record is ready.",
+                        files | length, num=files | length, title=record.title or record.id) }}</td>
+    </tr>
+    {% if record.self_html %}
+    <tr>
+        <td><a href="{{ record.self_html }}" class="button">{{ _("Open the record") }}</a></td>
+    </tr>
+    {% endif %}
+</table>
+{%- endautoescape -%}
+{%- endblock html_body -%}
+
+{%- block plain_body -%}
+{{ ngettext("All %(num)d file of '%(title)s' was downloaded and the record is ready.",
+            "All %(num)d files of '%(title)s' were downloaded and the record is ready.",
+            files | length, num=files | length, title=record.title or record.id) }}
+{% if record.self_html %}
+{{ _("Open the record:") }} {{ record.self_html }}
+{% endif %}
+{%- endblock plain_body -%}
+
+{%- block md_body -%}
+{{ ngettext("All %(num)d file of '%(title)s' was downloaded and the record is ready.",
+            "All %(num)d files of '%(title)s' were downloaded and the record is ready.",
+            files | length, num=files | length, title=record.title or record.id) }}
+{% if record.self_html %}
+[{{ _("Open the record") }}]({{ record.self_html }})
+{% endif %}
+{%- endblock md_body -%}

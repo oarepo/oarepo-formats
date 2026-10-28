@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "oarepo-formats"
+version = "1.0.0"
+description = "Format conversions for imports and exports of OARepo repositories (sandboxed XSLT 3.0, RO-Crate, README)"
+readme = "README.md"
+license = "MIT"
+dependencies = [
+    "oarepo-runtime>=7.13.0,<8",   # needs Export.display_if and Model.get_import
+    "saxonche>=13.1,<14",          # XSLT 3.0, imported only inside the sandbox worker process
+    "oarepo-model>=6.0.0,<7",      # RO-Crate: AddROCrateExport / AddROCrateZipExport customizations
+    "zipstream-ng>=1.7.0",         # RO-Crate: streamed ZIP export (already used by invenio-records-resources)
+]
+requires-python = ">=3.14,<3.15"
+
+[project.urls]
+Homepage = "https://github.com/oarepo/oarepo-formats"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.1.2",
+]
+tests = [
+    "pytest>=7.1.2",
+    "oarepo[tests]>=14.2.1b11.dev1,<15",  # RO-Crate integration tests (pytest-invenio)
+    "pytest-oarepo>=6.0.0,<7.0.0",
+    "rocrate>=0.16.0",                    # an independent RO-Crate reader to check the produced archives
+    "bagit>=1.9",                         # an independent BagIt validator to check the produced bags
+    "jsonschema",                         # validates the AIP's schema.json against its record.json
+    "responses",                          # the "remote" file host of the RO-Crate import tests
+    "invenio-checks",                     # the AIP export serializes the curation checks when enabled
+    "invenio-requests",                   # ... and the requests with their timelines
+]
+oarepo14 = [
+    "oarepo[rdm]>=14,<15",
+]
+
+[project.entry-points."invenio_base.api_apps"]
+oarepo_formats = "oarepo_formats.ext:OARepoFormats"
+
+[project.entry-points."invenio_base.apps"]
+oarepo_formats = "oarepo_formats.ext:OARepoFormats"
+
+[project.entry-points."invenio_base.blueprints"]
+oarepo_formats_readme = "oarepo_formats.readme.views:create_blueprint"
+oarepo_formats_rocrate = "oarepo_formats.rocrate.views:create_blueprint"
+
+[project.entry-points."invenio_base.api_blueprints"]
+oarepo_formats_readme = "oarepo_formats.readme.views:create_blueprint"
+oarepo_formats_rocrate = "oarepo_formats.rocrate.views:create_blueprint"
+
+[project.entry-points."invenio_celery.tasks"]
+oarepo_formats = "oarepo_formats.rocrate.imports.tasks"
+
+[project.entry-points."oarepo.cli"]
+xslt = "oarepo_formats.xslt.cli:xslt"
+
+[project.entry-points."invenio_access.actions"]
+oarepo_formats_aip_access = "oarepo_formats.rocrate.permissions:aip_access_action"
+
+[project.entry-points."invenio_audit_logs.actions"]
+"record.aip_export" = "oarepo_formats.rocrate.exports.aip:RecordAIPExportAuditLog"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/oarepo_formats",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]

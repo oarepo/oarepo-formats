@@ -1,0 +1,240 @@
+{
+  "doi": "10.82433/b09z-4k37",
+  "identifiers": [
+    {
+      "identifierType": "Local accession number",
+      "identifier": "12345"
+    }
+  ],
+  "types": {
+    "resourceTypeGeneral": "Dataset"
+  },
+  "titles": [
+    {
+      "title": "Example Title"
+    },
+    {
+      "title": "Example Subtitle",
+      "titleType": "AlternativeTitle"
+    },
+    {
+      "title": "Example TranslatedTitle",
+      "titleType": "AlternativeTitle"
+    },
+    {
+      "title": "Example AlternativeTitle",
+      "titleType": "AlternativeTitle"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Example Abstract",
+      "descriptionType": "Abstract"
+    }
+  ],
+  "creators": [
+    {
+      "name": "ExampleFamilyName, ExampleGivenName",
+      "nameType": "Personal",
+      "givenName": "ExampleGivenName",
+      "familyName": "ExampleFamilyName",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "0000-0001-5727-2427",
+          "nameIdentifierScheme": "ORCID"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "ExampleAffiliation",
+          "affiliationIdentifier": "04wxnsj81",
+          "affiliationIdentifierScheme": "ROR"
+        }
+      ]
+    },
+    {
+      "name": "ExampleOrganization",
+      "nameType": "Organizational",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "03yrm5c26",
+          "nameIdentifierScheme": "ROR"
+        }
+      ]
+    }
+  ],
+  "contributors": [
+    {
+      "name": "ExampleFamilyName, ExampleGivenName",
+      "nameType": "Personal",
+      "givenName": "ExampleGivenName",
+      "familyName": "ExampleFamilyName",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "0000-0001-5727-2427",
+          "nameIdentifierScheme": "ORCID"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "ExampleAffiliation",
+          "affiliationIdentifier": "04wxnsj81",
+          "affiliationIdentifierScheme": "ROR"
+        }
+      ]
+    },
+    {
+      "name": "ExampleOrganization",
+      "nameType": "Organizational",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "03yrm5c26",
+          "nameIdentifierScheme": "ROR"
+        }
+      ]
+    },
+    {
+      "name": "ExampleAffiliation",
+      "nameType": "Organizational",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "04wxnsj81",
+          "nameIdentifierScheme": "ROR"
+        }
+      ]
+    },
+    {
+      "name": "International DOI Foundation",
+      "nameType": "Organizational"
+    },
+    {
+      "name": "ExampleContributor",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "ExampleOrganization",
+          "affiliationIdentifier": "03yrm5c26",
+          "affiliationIdentifierScheme": "ROR"
+        }
+      ]
+    }
+  ],
+  "publisher": {
+    "name": "Example Publisher",
+    "publisherIdentifier": "04z8jg394",
+    "publisherIdentifierScheme": "ROR"
+  },
+  "publicationYear": 2023,
+  "dates": [
+    {
+      "date": "2023-01-01",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2023-01-01",
+      "dateType": "Created"
+    },
+    {
+      "date": "2023-01-01",
+      "dateType": "Updated"
+    }
+  ],
+  "subjects": [
+    {
+      "subject": "Digital curation and preservation"
+    },
+    {
+      "subject": "Example Subject"
+    }
+  ],
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/legalcode",
+      "rightsIdentifier": "cc-by-4.0"
+    },
+    {
+      "rights": "https://creativecommons.org/licenses/by-nc-nd/3.0/",
+      "rightsUri": "https://creativecommons.org/licenses/by-nc-nd/3.0/"
+    }
+  ],
+  "language": "en",
+  "version": "1",
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "http://purl.oclc.org/foo/bar",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsPartOf",
+      "resourceTypeGeneral": "Other"
+    },
+    {
+      "relatedIdentifier": "arXiv:0706.0001",
+      "relatedIdentifierType": "arXiv",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "Other"
+    },
+    {
+      "relatedIdentifier": "https://w3id.org/games/spec/coil#Coil_Bomb_Die_Of_Age",
+      "relatedIdentifierType": "URL",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "Other"
+    },
+    {
+      "relatedIdentifier": "10.1016/j.epsl.2011.11.037",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsDerivedFrom",
+      "resourceTypeGeneral": "Other"
+    },
+    {
+      "relatedIdentifier": "10.1016/j.epsl.2011.11.037",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsIdenticalTo",
+      "resourceTypeGeneral": "Other"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "Example Funder",
+      "funderIdentifier": "10.13039/501100000780",
+      "funderIdentifierType": "Crossref Funder ID",
+      "awardNumber": "12345",
+      "awardTitle": "Example AwardTitle",
+      "awardUri": "https://example.com/example-award-uri"
+    }
+  ],
+  "geoLocations": [
+    {
+      "geoLocationPlace": "Vancouver, British Columbia, Canada",
+      "geoLocationPoint": {
+        "pointLongitude": -123.1207,
+        "pointLatitude": 49.2827
+      },
+      "geoLocationPolygon": [
+        {
+          "polygonPoint": {
+            "pointLongitude": -71.032,
+            "pointLatitude": 41.991
+          }
+        },
+        {
+          "polygonPoint": {
+            "pointLongitude": -69.622,
+            "pointLatitude": 42.893
+          }
+        },
+        {
+          "polygonPoint": {
+            "pointLongitude": -68.211,
+            "pointLatitude": 41.991
+          }
+        },
+        {
+          "polygonPoint": {
+            "pointLongitude": -69.622,
+            "pointLatitude": 41.09
+          }
+        }
+      ]
+    }
+  ]
+}

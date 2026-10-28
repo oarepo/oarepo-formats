@@ -1,0 +1,49 @@
+{#
+  SPDX-FileCopyrightText: 2026 CESNET z.s.p.o
+  SPDX-License-Identifier: MIT
+
+  The mail of a deferred publish that committed. Self-contained, like the other two (see the note in
+  rocrate-import.completed.jinja): the backend renders the template's own blocks, so a shared base would
+  remove html_body/plain_body/md_body from it.
+#}
+{% set record = notification.context.record %}
+{% set files = notification.context.files %}
+
+{%- block subject -%}
+   {{ _("RO-Crate import published: {title}").format(title=record.title or record.id) }}
+{%- endblock subject -%}
+
+{%- block html_body -%}
+{%- autoescape true -%}
+<table style="font-family:'Lato',Helvetica,Arial,sans-serif;border-spacing:15px">
+    <tr>
+        <td>{{ ngettext("All %(num)d file of '%(title)s' was downloaded and the record was published.",
+                        "All %(num)d files of '%(title)s' were downloaded and the record was published.",
+                        files | length, num=files | length, title=record.title or record.id) }}</td>
+    </tr>
+    {% if record.self_html %}
+    <tr>
+        <td><a href="{{ record.self_html }}" class="button">{{ _("Open the record") }}</a></td>
+    </tr>
+    {% endif %}
+</table>
+{%- endautoescape -%}
+{%- endblock html_body -%}
+
+{%- block plain_body -%}
+{{ ngettext("All %(num)d file of '%(title)s' was downloaded and the record was published.",
+            "All %(num)d files of '%(title)s' were downloaded and the record was published.",
+            files | length, num=files | length, title=record.title or record.id) }}
+{% if record.self_html %}
+{{ _("Open the record:") }} {{ record.self_html }}
+{% endif %}
+{%- endblock plain_body -%}
+
+{%- block md_body -%}
+{{ ngettext("All %(num)d file of '%(title)s' was downloaded and the record was published.",
+            "All %(num)d files of '%(title)s' were downloaded and the record was published.",
+            files | length, num=files | length, title=record.title or record.id) }}
+{% if record.self_html %}
+[{{ _("Open the record") }}]({{ record.self_html }})
+{% endif %}
+{%- endblock md_body -%}

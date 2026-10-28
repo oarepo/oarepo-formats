@@ -1,0 +1,302 @@
+{#-
+The README of a dataset, following the README template of the Czech Data Steward Community
+(https://github.com/Czech-Data-Steward-Community/README_FILES_EXAMPLES, CC BY 4.0).
+
+Generated from the record's DataCite metadata and files; sections without metadata are left out.
+The context variables are described in oarepo_formats.readme.serializer.ReadmeSerializer.context.
+
+Do not override this template: override README.md.jinja, which extends it, and replace its blocks.
+There is a block for every section (`*_section`) and, nested in it, for every piece of information
+(`authors`, `contacts`, `brief_description`, ...); replacing a piece keeps the rest of its section.
+The values and macros defined below are available in every block.
+-#}
+
+{#- ===== values used by the blocks ===== -#}
+{%- set descriptions = datacite.descriptions or [] -%}
+{%- set related = datacite.relatedIdentifiers or [] -%}
+{%- set titles = datacite.titles or [] -%}
+{%- set title = (titles | rejectattr("titleType") | map(attribute="title") | first) or (titles | map(attribute="title") | first) or "Untitled dataset" -%}
+{%- set creators = datacite.creators or [] -%}
+{%- set contacts = (datacite.contributors or []) | selectattr("contributorType", "equalto", "ContactPerson") | list -%}
+{%- set contributors = (datacite.contributors or []) | rejectattr("contributorType", "in", ["ContactPerson", "RegistrationAgency", "RegistrationAuthority"]) | list -%}
+{%- set licenses = (datacite.rightsList or []) | selectattr("rights") | list -%}
+{%- set publisher = datacite.publisher.name if datacite.publisher is mapping else datacite.publisher -%}
+{%- set resource_type = datacite.types.resourceTypeGeneral or datacite.types.resourceType if datacite.types else none -%}
+{%- set version = datacite.version -%}
+{%- set funding = (datacite.fundingReferences or []) | selectattr("funderName") | list -%}
+{%- set projects = (datacite.fundingReferences or []) | selectattr("awardTitle") | list -%}
+{%- set publication_relations = {
+    "IsCitedBy": "Cited by",
+    "IsReferencedBy": "Referenced by",
+    "IsSupplementTo": "Supplement to",
+    "IsSupplementedBy": "Supplemented by",
+    "IsDescribedBy": "Described by",
+    "IsDocumentedBy": "Documented by",
+    "IsPublishedIn": "Published in",
+    "Cites": "Cites",
+    "References": "References",
+} -%}
+{%- set publications = related | selectattr("relationType", "in", publication_relations) | list -%}
+{%- set publication_items = (datacite.relatedItems or []) | selectattr("relationType", "in", publication_relations) | list -%}
+{%- set collected = (datacite.dates or []) | selectattr("dateType", "equalto", "Collected") | map(attribute="date") | list -%}
+{%- set places = (datacite.geoLocations or []) | map(attribute="geoLocationPlace") | select | list -%}
+{%- set sources = related | selectattr("relationType", "equalto", "IsDerivedFrom") | list -%}
+{%- set processing_software = related | selectattr("relationType", "equalto", "IsCompiledBy") | list -%}
+{%- set requirements = related | selectattr("relationType", "equalto", "Requires") | list -%}
+
+{#- ===== macros ===== -#}
+{%- macro description(type) -%}
+{{ descriptions | selectattr("descriptionType", "equalto", type) | map(attribute="description") | join("\n\n") }}
+{%- endmacro -%}
+
+{%- macro link(text, url) -%}
+{% if url %}[{{ text }}]({{ url }}){% else %}{{ text }}{% endif %}
+{%- endmacro -%}
+
+{%- macro person(p) -%}
+{{ p.name }}
+{%- for ni in p.nameIdentifiers or [] if (ni.nameIdentifierScheme or "") | upper == "ORCID" %}, ORCID: {{ link(ni.nameIdentifier, pid_url(ni.nameIdentifier, "ORCID")) }}{% endfor %}
+{%- set affiliations = (p.affiliation or []) | map(attribute="name") | select | list %}
+{%- if affiliations %} ({{ affiliations | join("; ") }}){% endif %}
+{%- endmacro -%}
+
+{%- macro related_identifier(r, label) -%}
+- ({{ label }}) {{ link(r.relatedIdentifier, pid_url(r.relatedIdentifier, r.relatedIdentifierType)) }}
+{%- endmacro -%}
+
+{#- descriptions, after the macro they use -#}
+{%- set abstract = description("Abstract") or (descriptions | map(attribute="description") | first) -%}
+{%- set series_information = description("SeriesInformation") -%}
+{%- set table_of_contents = description("TableOfContents") -%}
+{%- set technical_info = description("TechnicalInfo") -%}
+{%- set methods = description("Methods") -%}
+
+{#- ===== the README ===== -#}
+
+{% block title -%}
+# DATASET NAME: {{ title }}
+{%- endblock %}
+
+{% block generated_notice -%}
+> This README was **generated automatically** from the metadata of the dataset in the repository on
+> {{ generated_on }}{% if pid %} ({{ pid }}){% endif %}. Sections the metadata has no information for are left out,
+> and even metadata the record has may be missing from this README - for the complete metadata, see the
+> record in the repository{% if landing_page %}: {{ link(landing_page, landing_page) }}{% endif %}.
+{%- endblock %}
+
+{% block basic_information -%}
+## BASIC INFORMATION
+
+{% block authors -%}
+Author(s):
+
+{% for creator in creators -%}
+- {{ person(creator) }}
+{% endfor %}
+{% endblock %}
+{# the blocks of one list are joined by "{%- block": each emits whole lines #}
+{% block contacts %}{% for contact in contacts %}- Main contact: {{ person(contact) }}
+{% endfor %}{% endblock %}
+{%- block dataset_license %}{% for rights in licenses %}- Dataset license: {{ link(rights.rights, rights.rightsUri) }}
+{% endfor %}{% endblock %}
+{%- block dataset_version %}{% if version %}- Dataset version: {{ version }}
+{% endif %}{% endblock %}
+{%- block readme_version %}- README version: generated from the repository metadata on {{ generated_on }}
+{% endblock %}
+{%- block pid %}{% if pid %}- PID: {{ link(pid, pid) }}
+{% endif %}{% endblock %}
+
+---
+{%- endblock %}
+
+{% block description_section -%}
+{% if abstract or series_information or projects or publications or publication_items -%}
+## DESCRIPTION
+
+{% block brief_description -%}
+{% if abstract -%}
+### Brief Description
+
+{{ abstract }}
+{%- endif %}
+{%- endblock %}
+
+{% block research_context -%}
+{% if series_information or projects -%}
+### Research Context
+
+{{ series_information }}
+
+{% for award in projects -%}
+- Project: {{ link(award.awardTitle, award.awardUri) }}{% if award.awardNumber %} ({{ award.awardNumber }}){% endif %}{% if award.funderName %}, funded by {{ award.funderName }}{% endif %}
+{% endfor -%}
+{%- endif %}
+{%- endblock %}
+
+{% block related_publications -%}
+{% if publications or publication_items -%}
+### Related Publications
+
+{% for item in publication_items -%}
+- ({{ publication_relations[item.relationType] }}) {{ (item.titles or []) | map(attribute="title") | first }}
+{%- if item.publicationYear %} ({{ item.publicationYear }}){% endif %}
+{%- if item.relatedItemIdentifier %}. {{ link(item.relatedItemIdentifier.relatedItemIdentifier, pid_url(item.relatedItemIdentifier.relatedItemIdentifier, item.relatedItemIdentifier.relatedItemIdentifierType)) }}{% endif %}
+{% endfor -%}
+{% for r in publications -%}
+{{ related_identifier(r, publication_relations[r.relationType]) }}
+{% endfor -%}
+{%- endif %}
+{%- endblock %}
+
+---
+{%- endif %}
+{%- endblock %}
+
+{% block contents_section -%}
+{% if files or table_of_contents -%}
+## DATASET/COLLECTION CONTENTS
+
+{% block directory_structure -%}
+{% if files -%}
+### Directory Structure
+
+{% for file in files -%}
+- {{ link(file.name, file["@id"]) }}
+{%- if file.contentSize %} ({{ file.contentSize | int | filesizeformat }}{% if file.encodingFormat %}, {{ file.encodingFormat }}{% endif %}){% endif %}
+{% endfor -%}
+{%- endif %}
+{%- endblock %}
+
+{% block file_descriptions -%}
+{% if table_of_contents -%}
+### File Descriptions
+
+{{ table_of_contents }}
+{%- endif %}
+{%- endblock %}
+
+---
+{%- endif %}
+{%- endblock %}
+
+{% block data_structure_section -%}
+{% if technical_info -%}
+## DATA STRUCTURE
+
+{% block technical_info -%}
+{{ technical_info }}
+{%- endblock %}
+
+---
+{%- endif %}
+{%- endblock %}
+
+{% block methodology_section -%}
+{% if collected or places or sources or methods -%}
+## METHODOLOGY-PROVENANCE
+
+### Collection/Creation of Data
+
+{% block collection_dates %}{% for date in collected %}- Collection date: {{ date | replace("/", " to ") }}
+{% endfor %}{% endblock %}
+{%- block collection_location %}{% if places %}- Collection location: {{ places | join("; ") }}
+{% endif %}{% endblock %}
+{%- block original_data %}{% if sources %}- Original data:
+{% for r in sources %}  {{ related_identifier(r, "Derived from") }}
+{% endfor %}{% endif %}{% endblock %}
+{%- block collection_method %}{% if methods %}- Method of collection/production:
+
+{{ methods }}
+{% endif %}{% endblock %}
+
+---
+{%- endif %}
+{%- endblock %}
+
+{% block processing_section -%}
+{% if processing_software -%}
+## DATA PROCESSING
+
+{% block processing_software -%}
+### Method of Data Processing
+
+{% for r in processing_software -%}
+{{ related_identifier(r, "Compiled by") }}
+{% endfor -%}
+{%- endblock %}
+
+---
+{%- endif %}
+{%- endblock %}
+
+{% block reuse_section -%}
+{% if licenses or requirements -%}
+## REUSE
+
+{% block license_terms -%}
+{% if licenses -%}
+### License and Terms of Use
+
+{% for rights in licenses -%}
+- {{ link(rights.rights, rights.rightsUri) }}
+{% endfor -%}
+{%- endif %}
+{%- endblock %}
+
+{% block requirements -%}
+{% if requirements -%}
+### Software and Hardware Requirements
+
+{% for r in requirements -%}
+{{ related_identifier(r, "Requires") }}
+{% endfor -%}
+{%- endif %}
+{%- endblock %}
+
+---
+{%- endif %}
+{%- endblock %}
+
+{% block citation_section -%}
+## PROPOSED CITATION
+
+{% block citation -%}
+{{ creators | map(attribute="name") | join("; ") }}
+{%- if datacite.publicationYear %} ({{ datacite.publicationYear }}){% endif %}: {{ title }}.
+{%- if publisher %} {{ publisher }}.{% endif %}
+{%- if resource_type %} ({{ resource_type }}).{% endif %}
+{%- if pid %} {{ pid }}.{% endif %}
+{%- if version %} Version {{ version }}.{% endif %}
+{%- endblock %}
+
+---
+{%- endblock %}
+
+{% block acknowledgements_section -%}
+## ACKNOWLEDGEMENTS
+
+{% block funding -%}
+{% for award in funding -%}
+- Funded by {{ award.funderName }}{% if award.awardNumber %}, award {{ award.awardNumber }}{% endif %}{% if award.awardTitle %} ({{ award.awardTitle }}){% endif %}
+{% endfor -%}
+{%- endblock %}
+{% block contributors -%}
+{% for contributor in contributors -%}
+- {{ person(contributor) }}{% if contributor.contributorType %} - {{ contributor.contributorType }}{% endif %}
+{% endfor -%}
+{%- endblock %}
+
+{% block template_credit -%}
+This README was based on the template/examples authored by the **[Collective of Data Stewards of the Czech Data Stewards Community](https://github.com/Czech-Data-Steward-Community/README_FILES/blob/main/Collective_datastewards.md)** and is licensed under a [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+{%- endblock %}
+
+---
+{%- endblock %}
+
+{% block change_history_section -%}
+## README FILE CHANGE HISTORY
+
+{% block change_history -%}
+`{{ generated_on }}` Generated from the repository metadata{% if version %} of dataset version {{ version }}{% endif %}.
+{%- endblock %}
+{% endblock -%}

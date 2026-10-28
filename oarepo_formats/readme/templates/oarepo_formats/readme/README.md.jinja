@@ -1,0 +1,11 @@
+{#-
+The README export renders this template. Override it in <instance>/templates/oarepo_formats/readme/
+(or under an APP_THEME prefix) and replace the blocks of base.md.jinja you want to change, e.g.
+
+    {% extends "oarepo_formats/readme/base.md.jinja" %}
+    {% block data_structure_section %}
+    ## DATA STRUCTURE
+    ...
+    {% endblock %}
+-#}
+{% extends "oarepo_formats/readme/base.md.jinja" %}
