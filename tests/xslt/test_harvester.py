@@ -48,6 +48,17 @@ def test_registered_as_datastream_transformer(stylesheet_file):
     assert isinstance(transformer, XSLTTransformer)
 
 
+def test_the_defaults_are_not_changed():
+    """An app built from a config module holds invenio-vocabularies' dict itself: registering may not change it."""
+    app = Flask("test")
+    app.config["VOCABULARIES_DATASTREAM_TRANSFORMERS"] = vocabularies_config.VOCABULARIES_DATASTREAM_TRANSFORMERS
+
+    register_harvester_transformer(app)
+
+    assert "xslt" in app.config["VOCABULARIES_DATASTREAM_TRANSFORMERS"]
+    assert "xslt" not in vocabularies_config.VOCABULARIES_DATASTREAM_TRANSFORMERS
+
+
 def test_metadata_is_replaced(stylesheet_file):
     transformer = XSLTTransformer(stylesheet_file(FIXUP), suffix="!")
     entry = transformer.apply(oai_entry('<dc xmlns="urn:dc">hello</dc>'))

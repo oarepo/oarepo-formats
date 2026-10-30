@@ -65,10 +65,13 @@ class XSLTTransformer(BaseTransformer):
 def register_harvester_transformer(app: Flask) -> None:
     """Register `XSLTTransformer` as the `xslt` datastream transformer, unless the app already has one.
 
-    `VOCABULARIES_DATASTREAM_TRANSFORMERS` is created from invenio-vocabularies' defaults if not set yet
-    (this may run before invenio-vocabularies sets its own defaults).
+    The transformers of the app are copied, never changed in place: they may be invenio-vocabularies'
+    module-level default (Flask's `config.from_object` keeps the reference), which a registration in
+    place would change for every other app of the process.
     """
-    transformers = app.config.setdefault(
-        "VOCABULARIES_DATASTREAM_TRANSFORMERS", {**vocabularies_config.VOCABULARIES_DATASTREAM_TRANSFORMERS}
-    )
+    transformers = {
+        **vocabularies_config.VOCABULARIES_DATASTREAM_TRANSFORMERS,
+        **(app.config.get("VOCABULARIES_DATASTREAM_TRANSFORMERS") or {}),
+    }
     transformers.setdefault("xslt", XSLTTransformer)
+    app.config["VOCABULARIES_DATASTREAM_TRANSFORMERS"] = transformers

@@ -53,7 +53,7 @@ class OARepoFormats:
                     value = getattr(module, key)
                     if isinstance(value, (list, dict)):
                         value = copy.copy(value)
-                    app.config[key] = getattr(module, key)
+                    app.config[key] = value
         from .rocrate.imports.notifications import BUILDERS
 
         # a new dict, never a mutation: oarepo's initial config assigns the RDM dict and must not be
