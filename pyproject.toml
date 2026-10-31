@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "oarepo-formats"
-version = "1.0.0"
+version = "1.0.1"
 description = "Format conversions for imports and exports of OARepo repositories (sandboxed XSLT 3.0, RO-Crate, README)"
 readme = "README.md"
 license = "MIT"
