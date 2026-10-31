@@ -22,6 +22,7 @@ import queue
 import selectors
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import time
 from pathlib import Path
@@ -30,6 +31,22 @@ from typing import Any
 log = logging.getLogger(__name__)
 
 SANDBOX_SCRIPT = str(Path(__file__).with_name("sandbox.py"))
+
+
+def python_executable() -> str:
+    """Return the Python interpreter to start a sandbox worker with.
+
+    Under uwsgi `sys.executable` is the uwsgi binary itself (uwsgi sets the program name to its own
+    path), so it can not run a script; the interpreter of `sys.prefix` is used instead, which keeps
+    the virtualenv of the application.
+    """
+    if Path(sys.executable).name.startswith("python"):
+        return sys.executable
+    scripts = Path(sysconfig.get_path("scripts"))
+    for name in ("python3", "python", "python.exe"):
+        if (candidate := scripts / name).exists():
+            return str(candidate)
+    return sys.executable
 
 
 class SandboxError(Exception):
@@ -42,7 +59,7 @@ class SandboxWorker:
     def __init__(self, max_memory: int | None = None) -> None:
         """Start the worker process."""
         self.cwd = tempfile.TemporaryDirectory(prefix="oarepo-xslt-")
-        args = [sys.executable, "-I", SANDBOX_SCRIPT]
+        args = [python_executable(), "-I", SANDBOX_SCRIPT]
         if max_memory:
             args.append(str(max_memory))
         self.process = subprocess.Popen(  # noqa: S603 - fixed command line
