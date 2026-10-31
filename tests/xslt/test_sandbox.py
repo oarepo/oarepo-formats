@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import http.server
 import os
+import sys
 import threading
 from typing import TYPE_CHECKING
 
@@ -158,6 +159,14 @@ def test_infinite_recursion_is_killed(app, monkeypatch, stylesheet_file):
     with pytest.raises(ValidationError, match="timed out"):
         run(stylesheet_file, body)
     # the killed worker is replaced on the next call
+    assert run(stylesheet_file, '<xsl:template match="/"><ok/></xsl:template>') == "<ok/>"
+
+
+def test_a_worker_starts_under_uwsgi(monkeypatch, stylesheet_file):
+    """The uwsgi server sets `sys.executable` to itself; the worker must be started with a Python interpreter."""
+    current_formats.xslt_pool.close()  # drop the workers started with the real interpreter
+    monkeypatch.setattr(sys, "executable", "/invenio/venv/bin/uwsgi")
+
     assert run(stylesheet_file, '<xsl:template match="/"><ok/></xsl:template>') == "<ok/>"
 
 
