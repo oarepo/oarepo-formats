@@ -32,7 +32,6 @@ from invenio_access.utils import get_identity
 from invenio_accounts.models import User
 from invenio_db.uow import UnitOfWork
 from invenio_notifications.services.uow import NotificationOp
-from invenio_notifications.tasks import broadcast_notification
 from invenio_pidstore.errors import (
     PIDAlreadyExists,
     PIDDeletedError,
@@ -231,7 +230,13 @@ def _notify(  # noqa: PLR0913 - the options of one mail
     reason: str | None = None,
     error: str | None = None,
 ) -> None:
-    """Send one notification, unless it is an "ok" one and `?notifications=off` was given."""
+    """Send one notification after a unit of work commits.
+
+    An "ok" mail is skipped when `?notifications=off` was given; a failure mail is always sent. The mail is
+    registered as a `NotificationOp` and dispatched from the post-commit hook - the way the deferred publish
+    sends its mail, and the way invenio's services (e.g. invenio-requests) do - rather than broadcast from
+    the middle of the import.
+    """
     if not always and not payload["notify_ok"]:
         return
     notification = builder.build(
@@ -241,7 +246,9 @@ def _notify(  # noqa: PLR0913 - the options of one mail
         reason=reason,
         error=error,
     )
-    broadcast_notification.delay(notification.dumps())
+    with UnitOfWork() as uow:
+        uow.register(NotificationOp(notification))
+        uow.commit()
 
 
 def _described(entries: Iterable[dict]) -> list[dict]:

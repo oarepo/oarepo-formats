@@ -8,6 +8,9 @@ a database, a search index or celery. Only the cases the REST tests can not stag
 while the task runs, refusals and errors of the publish, a model without drafts); the outcomes a request
 reaches - the completed, published and failed mails, `?notifications=off` - are tested in
 `tests/api_tests/test_rocrate_import.py`.
+
+The mails are dispatched from the post-commit hook of the `NotificationOp` the task registers, so the
+capture patches that hook rather than the task module.
 """
 
 from __future__ import annotations
@@ -153,11 +156,10 @@ def app():
 
 @pytest.fixture
 def sent(monkeypatch):
-    """Capture every notification, including the one the publish registers on its unit of work."""
+    """Capture every notification: `_notify` and the publish both register a `NotificationOp`."""
     from invenio_notifications.services import uow as notification_uow
 
     broadcast = Broadcast()
-    monkeypatch.setattr(tasks, "broadcast_notification", broadcast)
     monkeypatch.setattr(notification_uow, "broadcast_notification", broadcast)
     monkeypatch.setattr(tasks, "UnitOfWork", Uow)
     return broadcast
