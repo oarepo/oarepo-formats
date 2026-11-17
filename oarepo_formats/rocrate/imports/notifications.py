@@ -78,7 +78,7 @@ class ROCrateImportNotificationBuilder(NotificationBuilder):
     """
 
     @classmethod
-    def build(  # ty: ignore[invalid-method-override] # the base takes **kwargs; this builder names them
+    def build(  # ty: ignore[incompatible-method-override] # the base takes **kwargs; this builder names them
         cls,
         user_id: str | int,
         record: dict,
