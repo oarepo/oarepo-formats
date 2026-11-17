@@ -75,6 +75,7 @@ from .schema import DataCiteToROCrateSchema
 from .zip import (
     DEFAULT_INCLUDED_EXPORTS,
     METADATA_FILE,
+    STREAM_HEADERS,
     CrateContent,
     ROCrateZipSerializer,
     chunks,
@@ -341,6 +342,7 @@ class ROCrateBagItSerializer(ROCrateZipSerializer):
             stream_with_context(iter(zs)),
             mimetype="application/zip",
             headers={
+                **STREAM_HEADERS,
                 "Content-Length": str(len(zs)),
                 "Content-Disposition": f"attachment; filename={obj['id']}{self.extension}",
             },

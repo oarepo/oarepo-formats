@@ -10,6 +10,9 @@ package is tested in its module (`test_rocrate_zip.py`, `test_rocrate_bagit.py`,
 
 from __future__ import annotations
 
+import io
+from contextlib import contextmanager
+
 import pytest
 from invenio_access.permissions import system_identity
 from invenio_records_resources.services.errors import PermissionDeniedError
@@ -67,6 +70,10 @@ def test_an_export_is_refused_or_served_before_streaming(
     url = record_url if target == "record" else formats_model.RecordResourceConfig.url_prefix
 
     if status == 200:
+        response = client.get(url, headers={"Accept": accept})
+        response.close()  # not streamed: pops the request context the streaming response holds
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["X-Accel-Buffering"] == "no"
         archive = exported(client, url, accept, tmp_path)
         assert "ro-crate-metadata.json" in archive.names
         assert archive.bag is None or archive.bag.is_valid()
@@ -149,3 +156,31 @@ def test_a_configured_profile_is_declared(app, client, record_url, monkeypatch, 
         assert graph[profile["@id"]] == {**profile, "@type": ["CreativeWork", "Profile"]}
     # the descriptor still conforms to the RO-Crate specification, not to the profile
     assert graph["ro-crate-metadata.json"]["conformsTo"] == {"@id": "https://w3id.org/ro/crate/1.3"}
+
+
+def missing(self, mode):
+    raise FileNotFoundError(self.key)
+
+
+@contextmanager
+def truncated(self, mode):
+    yield io.BytesIO(b"a,b")  # shorter than the recorded size, like an incomplete upload
+
+
+@pytest.mark.parametrize("stored", [missing, truncated])
+@pytest.mark.parametrize("accept", [ZIP, BAGIT, AIP])
+def test_an_unreadable_file_is_refused_before_streaming(
+    app, client, grant, record_url, monkeypatch, caplog, accept, stored
+):
+    """A file missing in the storage or of another size is a JSON error naming it, not a cut-off download."""
+    from invenio_records_resources.records.api import FileRecord
+
+    monkeypatch.setattr(FileRecord, "open_stream", stored)
+    grant("aip-access")
+
+    response = client.get(record_url, headers={"Accept": accept})
+
+    assert response.status_code == 500, response.data
+    assert response.mimetype == "application/json"
+    assert "data.csv" in response.json["message"]
+    assert "file 'data.csv' of record" in caplog.text
