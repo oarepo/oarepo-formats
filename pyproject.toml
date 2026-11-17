@@ -9,9 +9,9 @@ description = "Format conversions for imports and exports of OARepo repositories
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "oarepo-runtime>=7.13.0,<8",   # needs Export.display_if and Model.get_import
+    "oarepo-runtime>=8.0.0,<9.0.0",   # needs Export.display_if and Model.get_import
     "saxonche>=13.1,<14",          # XSLT 3.0, imported only inside the sandbox worker process
-    "oarepo-model>=6.0.0,<7",      # RO-Crate: AddROCrateExport / AddROCrateZipExport customizations
+    "oarepo-model>=7.0.0,<8.0.0",      # RO-Crate: AddROCrateExport / AddROCrateZipExport customizations
     "zipstream-ng>=1.7.0",         # RO-Crate: streamed ZIP export (already used by invenio-records-resources)
 ]
 requires-python = ">=3.14,<3.15"
