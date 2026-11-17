@@ -1,7 +1,7 @@
 [rules]
 # Equivalent to mypy's `--ignore-missing-imports`: don't error on
 # third-party imports ty can't resolve (e.g. untyped/undeclared deps).
-unresolved-import = "ignore"
+import-not-found = "ignore"
 
 [src]
 # Equivalent to mypy's `--exclude os-v2`. Needs the `**/.../**` form. ty's

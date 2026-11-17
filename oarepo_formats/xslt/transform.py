@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 
 from flask import current_app
-from lxml import etree
+from lxml import etree  # ty: ignore[missing-module-member]
 from marshmallow import ValidationError
 from oarepo_runtime.resources.xml import parse_xml
 

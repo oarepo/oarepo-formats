@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from flask_resources.deserializers import DeserializerMixin
 from flask_resources.serializers import BaseSerializer
-from lxml import etree
+from lxml import etree  # ty: ignore[missing-module-member]
 from oarepo_model.customizations import AddMetadataExport, AddMetadataImport
 from oarepo_runtime.api import ExportEngine, ExportRepresentation
 from oarepo_runtime.proxies import current_runtime

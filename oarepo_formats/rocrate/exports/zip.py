@@ -40,8 +40,8 @@ profile is added to the crate as a contextual entity.
 ## Checks
 
 Everything that can fail (permissions, `RECORDS_RESOURCES_ARCHIVE_DOWNLOAD_MAX_SIZE`, a missing DataCite
-export, an unsafe file key) is checked before the response is returned; the files themselves are read
-one at a time while the archive is streamed.
+export, an unsafe file key, a file that can not be opened) is checked before the response is returned;
+the files themselves are read one at a time while the archive is streamed.
 
 ## Adding archive members
 
@@ -59,6 +59,7 @@ class MyZipSerializer(ROCrateZipSerializer):
 from __future__ import annotations
 
 import hashlib
+import io
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
@@ -70,7 +71,7 @@ from invenio_records_resources.services.files.transfer.constants import REMOTE_T
 from invenio_stats.proxies import current_stats
 from oarepo_runtime.api import ExportEngine
 from oarepo_runtime.proxies import current_runtime
-from werkzeug.exceptions import NotAcceptable
+from werkzeug.exceptions import InternalServerError, NotAcceptable
 from zipstream import ZIP_STORED, ZipStream
 
 from ...files import add_checksum_terms
@@ -99,6 +100,12 @@ DEFAULT_INCLUDED_EXPORTS: Mapping[str, str] = {
 """
 
 CHUNK_SIZE = 1024 * 1024
+
+STREAM_HEADERS: Mapping[str, str] = {
+    "Cache-Control": "private, no-store",  # the archive depends on the user and the Accept header
+    "X-Accel-Buffering": "no",  # nginx: stream to the client instead of buffering the archive
+}
+"""Headers of the streamed archive responses."""
 
 
 def is_administrator(identity: Any) -> bool:
@@ -270,6 +277,47 @@ def chunks(file_record: Any) -> Iterator[bytes]:
             yield chunk
 
 
+class UnreadableFilesError(InternalServerError):
+    """Stored files of a record can not be read, so its archive can not be created.
+
+    `files` holds their keys: the UI shows them on its export error page (oarepo-ui), the REST API in the
+    JSON error message.
+    """
+
+    def __init__(self, files: list[str]):
+        """Create the error for the keys of the unreadable files."""
+        super().__init__(
+            f"The archive can not be created, these files of the record can not be read: {', '.join(files)}. "
+            "Please contact the repository."
+        )
+        self.files = files
+
+
+def check_readable(obj: dict, files: list[tuple[str, Any]]) -> None:
+    """Open every file once and check its size, so that a missing one fails the request, not the stream.
+
+    Once the archive is streaming its status can not change: a file that can not be opened there just
+    cuts the download off, with no explanation.
+
+    Raises:
+        UnreadableFilesError: listing the files that can not be read.
+
+    """
+    unreadable = []
+    for _, file_record in files:
+        try:
+            with file_record.open_stream("rb") as fp:
+                # the archive is sized up front: a stored file of another size (e.g. an incomplete
+                # upload) would break the stream as well; on S3 the size is that of the open's HEAD
+                if (size := fp.seek(0, io.SEEK_END)) != file_record.file.size:
+                    raise ValueError(f"stored size {size} differs from the recorded {file_record.file.size}")
+        except Exception:
+            current_app.logger.exception("RO-Crate: file %r of record %s can not be read", file_record.key, obj["id"])
+            unreadable.append(file_record.key)
+    if unreadable:
+        raise UnreadableFilesError(unreadable)
+
+
 class ROCrateZipSerializer(BaseSerializer):
     """Serialize a record to a streamed ZIP archive: an attached RO-Crate with metadata exports and files.
 
@@ -325,7 +373,7 @@ class ROCrateZipSerializer(BaseSerializer):
 
         Everything that can fail happens here, before a response is returned: the metadata export, the
         `read_files` permission and `RECORDS_RESOURCES_ARCHIVE_DOWNLOAD_MAX_SIZE` (not for administrators),
-        and a described file without stored content.
+        a described file without stored content, and a stored file that can not be opened.
 
         The document is mutated further by the caller (provenance, profile) before it is serialized;
         [add_checksum_terms][oarepo_formats.files.add_checksum_terms] has to run last.
@@ -350,6 +398,7 @@ class ROCrateZipSerializer(BaseSerializer):
             if key not in file_records:
                 raise ValueError(f"File {key!r} of record {obj['id']} is listed but has no stored content")
             crate.files.append((path, file_records[key]))
+        check_readable(obj, crate.files)
         return crate
 
     def serialize_object(self, obj: dict) -> Response:
@@ -376,7 +425,11 @@ class ROCrateZipSerializer(BaseSerializer):
         return Response(
             stream_with_context(iter(zs)),
             mimetype="application/zip",
-            headers={"Content-Length": str(len(zs)), "Content-Disposition": f"attachment; filename={obj['id']}.zip"},
+            headers={
+                **STREAM_HEADERS,
+                "Content-Length": str(len(zs)),
+                "Content-Disposition": f"attachment; filename={obj['id']}.zip",
+            },
         )
 
     def serialize_object_list(self, obj_list: dict) -> str:  # noqa: ARG002 always refused

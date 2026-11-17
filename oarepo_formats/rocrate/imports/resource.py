@@ -153,7 +153,7 @@ class ROCrateImportResourceMixin:
     def create_url_rules(self) -> list[dict]:
         """Return the resource's URL rules, with the import route appended."""
         path = f"{self.config.url_prefix}{ROUTE}" if has_drafts(self.service) else ROUTE
-        return [*super().create_url_rules(), route("POST", path, self.import_rocrate)]  # ty: ignore[unresolved-attribute]
+        return [*super().create_url_rules(), route("POST", path, self.import_rocrate)]  # ty: ignore[missing-attribute]
 
     def import_rocrate(self) -> Any:
         """Create a record from a detached crate, an attached package, or a package behind a URL.

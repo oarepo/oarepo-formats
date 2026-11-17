@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 
 from flask_resources.deserializers import DeserializerMixin
 from flask_resources.serializers import BaseSerializer
-from lxml import etree
+from lxml import etree  # ty: ignore[missing-module-member]
 from marshmallow import ValidationError
 from oarepo_runtime.resources.xml import XMLDeserializer, XMLSerializer, parse_xml
 
